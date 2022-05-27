@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgx"
 
 	"github.com/circleci/ex/o11y"
 )
@@ -51,19 +51,19 @@ func mapError(err error) (bool, error) {
 	if ok, e := mapBadCon(err); ok {
 		return true, e
 	}
-	e := &pq.Error{}
+	e := pgx.PgError{}
 	if errors.As(err, &e) {
 		switch e.Code {
 		case pgForeignKeyConstraintErrorCode:
-			return true, &Error{sentinel: ErrConstrained, pqErr: e}
+			return true, &Error{sentinel: ErrConstrained, pqErr: &e}
 		case pgExceptionRaised:
-			return true, &Error{sentinel: ErrException, pqErr: e}
+			return true, &Error{sentinel: ErrException, pqErr: &e}
 		case pgStatementCanceled:
-			return true, &Error{sentinel: ErrCanceled, pqErr: e}
+			return true, &Error{sentinel: ErrCanceled, pqErr: &e}
 		case pgUniqueViolationErrorCode:
-			return true, &Error{sentinel: ErrNop, pqErr: e}
+			return true, &Error{sentinel: ErrNop, pqErr: &e}
 		}
-		return true, &Error{pqErr: e}
+		return true, &Error{pqErr: &e}
 	}
 	return false, err
 }
@@ -83,12 +83,12 @@ func badConn(err error) bool {
 // The sentinel is included for easier testing of the existing error vars.
 // for example errors.Is(err, ErrConstrained)
 type Error struct {
-	pqErr    *pq.Error
+	pqErr    *pgx.PgError
 	sentinel error
 }
 
 // PqError will return any wrapped pqError is e has one
-func (e Error) PqError() *pq.Error {
+func (e Error) PqError() *pgx.PgError {
 	return e.pqErr
 }
 
@@ -120,7 +120,7 @@ func (e *Error) Error() string {
 	return "unknown database error"
 }
 
-func PqError(err error) *pq.Error {
+func PqError(err error) *pgx.PgError {
 	e := &Error{}
 	if errors.As(err, &e) {
 		return e.pqErr

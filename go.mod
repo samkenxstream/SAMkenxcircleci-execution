@@ -13,10 +13,10 @@ require (
 	github.com/honeycombio/beeline-go v1.8.0
 	github.com/honeycombio/dynsampler-go v0.2.1
 	github.com/honeycombio/libhoney-go v1.15.8
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/jolestar/go-commons-pool/v2 v2.1.2
 	github.com/klauspost/compress v1.15.5
-	github.com/lib/pq v1.10.6
 	github.com/makasim/amqpextra v0.17.0
 	github.com/rabbitmq/amqp091-go v1.3.4
 	github.com/rollbar/rollbar-go v1.4.2
@@ -43,6 +43,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
