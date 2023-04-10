@@ -14,6 +14,8 @@ import (
 	"github.com/circleci/ex/o11y/wrappers/baggage"
 )
 
+const contextCancelledKey = "o11y-context-cancelled-key"
+
 // Middleware for Gin router
 //
 //nolint:funlen
@@ -66,7 +68,11 @@ func Middleware(provider o11y.Provider, serverName string, queryParams map[strin
 
 		defer func() {
 			// Common OTEL attributes
-			span.AddRawField("http.status_code", c.Writer.Status())
+			o11yStatus := c.Writer.Status()
+			if c.GetBool(contextCancelledKey) {
+				o11yStatus = 499
+			}
+			span.AddRawField("http.status_code", o11yStatus)
 			span.AddRawField("http.response_content_length", c.Writer.Size())
 
 			if m != nil {
@@ -76,7 +82,7 @@ func Middleware(provider o11y.Provider, serverName string, queryParams map[strin
 						"http.server_name:" + serverName,
 						"http.method:" + c.Request.Method,
 						"http.route:" + c.FullPath(),
-						"http.status_code:" + strconv.Itoa(c.Writer.Status()),
+						"http.status_code:" + strconv.Itoa(o11yStatus),
 						//TODO: "has_panicked:"+,
 					},
 					1,
@@ -97,7 +103,7 @@ func ClientCancelled() gin.HandlerFunc {
 		ctx := c.Request.Context()
 		defer func() {
 			if errors.Is(ctx.Err(), context.Canceled) {
-				c.Status(499)
+				c.Set(contextCancelledKey, true)
 				return
 			}
 			// check whether there were any errors within the gin handling, for instance
