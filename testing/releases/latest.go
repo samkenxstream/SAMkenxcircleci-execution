@@ -3,8 +3,8 @@ package releases
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/circleci/ex/releases/download"
@@ -62,7 +62,7 @@ func DownloadLatest(ctx context.Context, conf DownloadConfig) (string, error) {
 		conf.Dir = "../bin"
 	}
 
-	dl, err := download.NewDownloader(time.Minute, filepath.Join(conf.Dir, conf.Which))
+	dl, err := download.NewDownloader(time.Minute, conf.Dir)
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
@@ -70,8 +70,9 @@ func DownloadLatest(ctx context.Context, conf DownloadConfig) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("download (%s) problem: %w", testBinURL, err)
 	}
-	if runtime.GOOS == "windows" {
-		path += ".exe"
+	const winExeExtension = ".exe"
+	if runtime.GOOS == "windows" && !strings.HasSuffix(path, winExeExtension) {
+		path += winExeExtension
 	}
 	return path, nil
 }
